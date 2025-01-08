@@ -1,5 +1,4 @@
 # WhatsAppPresentacionV3
-
 Este proyecto permite integrar un bot con la API de WhatsApp para gestionar la comunicación con los usuarios. El bot recibe y procesa mensajes entrantes, maneja respuestas interactivas y envía documentos y mensajes de texto. El proyecto está compuesto por un controlador que se encarga de gestionar las solicitudes webhook, tres servicios para manejar la lógica de la comunicación y cuatro modelos que estructuran los datos.
 
 ## Tabla de Contenidos
@@ -20,13 +19,10 @@ Este proyecto permite integrar un bot con la API de WhatsApp para gestionar la c
 - [Dependencias](#dependencias)
 
 ## Descripción
-
-Este proyecto está diseñado para interactuar con la API de WhatsApp Business. El controlador recibe las solicitudes webhook, las valida y procesa los mensajes entrantes. Dependiendo del tipo de mensaje (texto, interactivo o documento), el controlador delega el procesamiento a los servicios correspondientes para manejar la lógica de negocio. Los servicios son responsables de manejar la lógica de negocio y la generación de respuestas adecuadas.
-
+Este proyecto está diseñado para interactuar con la API de WhatsApp Business. El controlador recibe las solicitudes webhook, las valida y procesa los mensajes entrantes. Dependiendo del tipo de mensaje (texto, interactivo o documento), el controlador delega el procesamiento a los servicios correspondientes para manejar la lógica de negocio. Los servicios son responsables de gestionar la lógica de negocio y la generación de respuestas adecuadas.
 
 ## Cómo se Comunica con la API de WhatsApp
-
-El bot se comunica con la API de WhatsApp a través de solicitudes HTTP POST y GET, así como el uso de webhooks para recibir mensajes. Cuando un usuario interactúa con el bot en WhatsApp, WhatsApp envía un webhook a la URL configurada. El controlador procesa estos webhooks y responde dependiendo de en que punto del flujo se esté, y que solicita el cliente.
+El bot se comunica con la API de WhatsApp a través de solicitudes HTTP POST y GET, así como el uso de webhooks para recibir mensajes. Cuando un usuario interactúa con el bot en WhatsApp, WhatsApp envía un webhook a la URL configurada. El controlador procesa estos webhooks y responde dependiendo del punto del flujo en el que se esté y lo que solicita el cliente.
 
 ### Comunicación:
 
@@ -36,7 +32,7 @@ El bot se comunica con la API de WhatsApp a través de solicitudes HTTP POST y G
 
 2. **Manejo de Mensajes Recibidos:**
    - Cuando WhatsApp envía un mensaje a la URL del webhook, se recibe como una solicitud `POST`.
-   - El controlador procesa el mensaje entrante y, dependiendo de su tipo (texto, interactivo, o documento), invoca los servicios correspondientes para manejar la lógica de negocio.
+   - El controlador procesa el mensaje entrante y, dependiendo de su tipo (texto, interactivo o documento), invoca los servicios correspondientes para manejar la lógica de negocio.
 
 3. **Respuesta del Bot:**
    - Después de procesar el mensaje, el controlador usa el servicio `WhatsAppMessageService` para enviar la respuesta de vuelta al usuario a través de la API de WhatsApp.
@@ -71,10 +67,11 @@ En este modelo se guarda un todo mensaje recibido por WhatsApp Ya que todos los 
 ```
 
 ### UploadedMedia
-Este Modelo guarda el id y el url extraido de haber subido un documento a WhatsApp
+Este modelo guarda el ID y la URL extraída de haber subido un documento a WhatsApp.
 
 ### WhatsAppInteractive
-Este Modelo se puede usar para guardar la información que se le va a mandar a `EnviarListaDeOpciones` o `EnviarBotonInteractivo`.
+Este modelo se usa para guardar la información que se le enviará a `EnviarListaDeOpciones` o `EnviarBotonInteractivo`.
+
 
 ### WebhookValidationRequest
 Simplifica la vaidación del webhook.
@@ -82,94 +79,93 @@ Simplifica la vaidación del webhook.
 ## Servicios
 
 ### HandleDocument
-Maneja todas las acciones relacionadas a recibir un documento.
+Maneja todas las acciones relacionadas con la recepción de documentos.
 
 #### Flujo de recibir un documento
-1. Se recibe el webhook de whatsapp respecto al documento de donde se extrae:
-    -El nombre del documento
-    -El mime type que es el tipo de documento (Ejemplos: PDF, XML, text)
-    -El ID que WhatsApp le otorga al documento
+1. Se recibe el webhook de WhatsApp respecto al documento, de donde se extraen:
+    - El nombre del documento
+    - El MIME type (tipo de documento, Ej: PDF, XML, texto)
+    - El ID que WhatsApp le otorga al documento
 2. Se prepara la localización de descarga con el nombre del documento.
-3. Usando la función `ObtenerURLDocumentoDeID` se solicita la url temporal que le asigna WhatsApp para descargar.
-4. Usando la función `DescargarDocumento` se solicita el documento en para guardarlo en un byte array.
-5. Al recibir el documento se guarda en la localización de descarga.
+3. Usando la función `ObtenerURLDocumentoDeID`, se solicita la URL temporal asignada por WhatsApp para descargar.
+4. Usando la función `DescargarDocumento`, se solicita el documento para guardarlo en un byte array.
+5. Al recibir el documento, se guarda en la localización de descarga.
 
 #### Variables
-Recibe token de acceso y `WebHookResponseModel` para procesar.
-Retorna "Documento procesado y descargado correctamente", o error.
+Recibe el token de acceso y `WebHookResponseModel` para procesar.
+Retorna "Documento procesado y descargado correctamente", o un error.
 
 ### SendLocalDocument
-Recive un token de verificación y ID de teléfono (modificable a que se use un número de teléfono) al que mandar un documento guardado en el local.
+Recibe un token de verificación y el ID de teléfono (modificable a un número de teléfono) al que se enviará un documento guardado localmente.
 
 #### Flujo de mandar un documento local
 1. Se confirma que el documento indicado exista.
-2. Transformar el documento a un array binario
-3. Recabar información del documento:
-    - Nombre: string nombreDocumentoMandar
-    - Tipo: var mimeType
-        a. Utilizando la función GetMimeType
-4. Se hace la solicitud http donde se manda el array binario a WhatsApp
-5. Se obtiene el ID del documento que proporciona WhatsApp: idDocumentoMandar
-6. Se envia el documento con la función EnviarDocumentoPorId
+2. Se transforma el documento a un array binario.
+3. Se recaba información del documento:
+    - Nombre: string `nombreDocumentoMandar`
+    - Tipo: `mimeType`, utilizando la función `GetMimeType`
+4. Se hace la solicitud HTTP para enviar el array binario a WhatsApp.
+5. Se obtiene el ID del documento proporcionado por WhatsApp: `idDocumentoMandar`.
+6. Se envía el documento con la función `EnviarDocumentoPorId`.
 
 #### GetMimeType
-Recaba la extención del documento y la transforma a la extención usada por WhatsApp
+Recaba la extensión del documento y la transforma a la extensión usada por WhatsApp.
 
 ### WhatsAppMessageService
-Servicio prinsipal para enviar distintos tipos de mensajes.
+Servicio principal para enviar distintos tipos de mensajes.
 
 #### Constructor y variables de todo el servicio
-- idTelefono: ID del número de WhatsApp Business (De la empresa). Actualmente se usa número test que da whatsapp.
-- tokenAcceso: Token de acceso para autenticación en la API de Facebook Graph. Se tiene que generar cada cierto tiempo y modificar en elprograma.
-- facebookGraphVersion: Versión de facebook graph con la que el programa es compatible.
-- BuildApiUrl: Url al que se manda la solicitud de mandar mensajes.
+- `idTelefono`: ID del número de WhatsApp Business (de la empresa). Actualmente se usa un número de prueba proporcionado por WhatsApp.
+- `tokenAcceso`: Token de acceso para autenticación en la API de Facebook Graph. Debe generarse periódicamente y modificarse en el programa.
+- `facebookGraphVersion`: Versión de Facebook Graph con la que el programa es compatible.
+- `BuildApiUrl`: URL a la que se manda la solicitud de mensajes.
 
 #### EnviarMensaje
-Función que las demás funciones llaman para mandar el mensaje. Envía un mensaje de texto a través de la API de Facebook Graph
-Todas las demás funciones construllen el mensaje a mandar y llaman esta función para mandarlo.
+Función que las demás funciones llaman para enviar el mensaje. Envía un mensaje de texto a través de la API de Facebook Graph.
+Todas las demás funciones construyen el mensaje a enviar y llaman a esta función para enviarlo.
 
 ##### Flujo
-1. Crea un cliente Http que se borra al temrinar la función
-2. Añade los Headers:
-    - "Bearer" con el token de autentificación
+1. Crea un cliente HTTP que se borra al terminar la función.
+2. Añade los headers:
+    - "Bearer" con el token de autenticación
     - "Content-Type" con "application/json"
-3. Usando POST manda el mensaje y espera la respuesta
+3. Usando `POST`, manda el mensaje y espera la respuesta.
 
 ##### Variables
-- urlFacebookGraph: URL del endpoint de la API de Facebook Graph que construllen las funciones que la llaman. Ejemplo: https://graph.facebook.com/v21.0/9999999999/messages
-- message: Objeto que contiene el mensaje en formato JSON. Se usan arrays debido a la presencia de listas y botones con opciones modificables.
+- `urlFacebookGraph`: URL del endpoint de la API de Facebook Graph a la que las funciones llaman. Ejemplo: `https://graph.facebook.com/v21.0/9999999999/messages`.
+- `message`: Objeto que contiene el mensaje en formato JSON. Se usan arrays debido a la presencia de listas y botones con opciones modificables.
 
 #### EnviarTexto
-Crea el JSON para enviar un mensaje de texto simple y llama la función EnviarMensaje para enviarlo.
+Crea el JSON para enviar un documento a través de un enlace URL público.
 
 ##### Variables del JSON
-- messaging_product: siempre es "whatsapp"
-- to: emparejado con el número al que se le va a mandar mensaje, usa la variable "numeroTelefonoObjetivo"
-- type: es "text" ya que es un texto simple
-- text: es el mensaje que verá el receptor del mensaje
+- `messaging_product`: Siempre es "whatsapp".
+- `to`: Emparejado con el número al que se le enviará el mensaje, usa la variable `numeroTelefonoObjetivo`.
+- `type`: "text" ya que es un texto simple.
+- `text`: El mensaje que verá el receptor.
 
 #### EnviarDocumentoPorUrl
 Crea el JSON para enviar un documento a través de un enlace URL público
 
 ##### Variables del JSON
-- messaging_product: siempre es "whatsapp"
-- to: emparejado con el número al que se le va a mandar mensaje, usa la variable "numeroTelefonoObjetivo"
-- type: es "document" ya que se manda un documento
-- document: objeto compuesto por
-    a. link : URL público del documento a mandar, usa la variable "link"
-    b. filename: nombre del archivo a mandar, usa la variable "nombreArchivo"
+- `messaging_product`: Siempre es "whatsapp".
+- `to`: Emparejado con el número al que se le enviará el mensaje, usa la variable `numeroTelefonoObjetivo`.
+- `type`: "document" ya que se enviará un documento.
+- `document`: Objeto compuesto por:
+    - `link`: URL público del documento a enviar, usa la variable `link`.
+    - `filename`: Nombre del archivo a enviar, usa la variable `nombreArchivo`.
 
 #### EnviarDocumentoPorId
 Envía un documento utilizando su ID en la nube de WhatsApp Business. Requiere que WhatsApp YA le haya asignado un ID.
-Un documento puede subirse a WhatsApp subiendólo manualmente o subiendolo como con la función SendLocalDocument
+Un documento puede subirse a WhatsApp manualmente o utilizando la función `SendLocalDocument`.
 
 ##### Variables del JSON
-- messaging_product: siempre es "whatsapp"
-- to: emparejado con el número al que se le va a mandar mensaje, usa la variable "numeroTelefonoObjetivo"
-- type: es "document" ya que se manda un documento
-- document: objeto compuesto por
-    a. id : id asignado por WhatsApp del documento a mandar, usa la variable "idDocumento"
-    b. filename: nombre del archivo a mandar, usa la variable "nombreArchivo"
+- `messaging_product`: Siempre es "whatsapp".
+- `to`: Emparejado con el número al que se le enviará el mensaje, usa la variable `numeroTelefonoObjetivo`.
+- `type`: "document" ya que se enviará un documento.
+- `document`: Objeto compuesto por:
+    - `id`: ID asignado por WhatsApp al documento a enviar, usa la variable `idDocumento`.
+    - `filename`: Nombre del archivo a enviar, usa la variable `nombreArchivo`.
 
 #### EnviarBotonConUrl
 Envía un botón con un enlace URL. Al precionar el botón, se habre el URL
@@ -262,7 +258,7 @@ Función por ser eliminada, se usa para marcar un error al desarrollar y mandarl
 ## Controlador
 
 ### WebhookValidation
-Destino al que los Webhooks están apuntados, valida que sean de WhatsApp usando un token de verificación que se le comparte a WhatsApp manualmente
+Destino al que los webhooks están apuntados. Valida que sean de WhatsApp usando un token de verificación que se le comparte a WhatsApp manualmente.
 
 ### Presentable
 
