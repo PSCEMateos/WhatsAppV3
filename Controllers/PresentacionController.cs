@@ -1,4 +1,4 @@
-﻿
+
 using WhatsAppPresentacionV3.Modelos;
 using WhatsAppPresentacionV3.Servicios;
 using Microsoft.AspNetCore.Mvc;
@@ -45,7 +45,7 @@ namespace WhatsAppPresentacionV3.Controllers
         public PresentacionController()
         {
             string idTelefono = "513380398517712"; // Replace with actual Phone ID
-            string tokenAcceso = "EAAGf6qvOtkYBO1xWB1FVPY2VGHDV1pwVDqY23LEVeqiGP5xsOzaXcXk4WdqLx2rOCtcdt1xTZA6T6fPCgt63bx4WIx4fABFQI9nIKOQdA5vhEVuWqeocUYaCdk6XsqJyJQusdwizTe0DKPZAkEVLPJcMmS2t9l7E52ne9UGDnh7qk6t5NgpNqN33NMWCVY5MCCq2SqpUw72nk4ysPcFM4bgcPf"; // Replace with actual Access Token
+            string tokenAcceso = "EAAGf6qvOtkYBO6mkn3tdd6kfYtUShTisYAzY8Hni1PndsBRNMTqMGBBFmookHLp3dQ5hqEwEhUDsRRKiqkRXBQ8e8XQAa8n4Q4CQO0xwB72mVLiuJTIMAlCiW969ZB90jD9Q1KDuvLTQbSV0jntlmYSnGTjlhLiePRRYWbLR5UQVggfRWIUUaKd9WahlHjx1SEY5ZANPuRda1XUogcwo4Raw4ZD"; // Replace with actual Access Token
             _messageSendService = new WhatsAppMessageService(idTelefono, tokenAcceso);
             _hanldeDocument = new HanldeDocument(tokenAcceso);
         }
@@ -115,6 +115,15 @@ namespace WhatsAppPresentacionV3.Controllers
 
         }
 
+        /*[HttpGet("api/webhook/flow")]
+        public string FlowWebhook([FromQuery] WebhookValidationRequest request)
+        {
+            if (request.TokenDeVerificacion.Equals("Presenta61224"))
+            {
+                return request.Challenge;
+            }
+            return "Token Incorrecto";
+        }*/
 
         //Recabamos los Mensajes VIA GET 
         [HttpGet]
@@ -166,7 +175,14 @@ namespace WhatsAppPresentacionV3.Controllers
                 _receivedMessages.Add($"Message is List reply with ID: {selectedListButtonId}");
                 return await HandleInteractiveListMessage(webhookData, selectedListButtonId, fromPhoneNumber);
             }
-            return "";
+            /*else if (incomingMessage.interactive.flow_reply != null)
+            {
+                string flowName = incomingMessage.interactive.flow_reply.name;
+                string flowBody = incomingMessage.interactive.flow_reply.body;
+                _receivedMessages.Add($"Flow received: {flowName} - {flowBody}");
+                return await HandleInteractiveFlowMessage(webhookData, fromPhoneNumber);
+            }*/
+                return "";
         }
         private async Task<string> HandleInteractiveButtonMessage(
             WebHookResponseModel webhookData, 
@@ -397,6 +413,11 @@ namespace WhatsAppPresentacionV3.Controllers
             if (userMessage != _oldUserMessage) { _oldUserMessage = userMessage; }
             return messageStatus;
         }
+        /*private async Task<string> HandleInteractiveFlowMessage(WebHookResponseModel webhookData,
+            string fromPhoneNumber)
+        {
+
+        }*/
         private async Task<string> HandleDocumentMessage(WebHookResponseModel webhookData)
         {
             await _hanldeDocument.ProcesaRecibirDocumento(webhookData);
