@@ -280,6 +280,87 @@ namespace WhatsAppPresentacionV3.Servicios
             };
             return await EnviarMensaje($"https://graph.facebook.com/v21.0/{_idTelefono}/messages", finalMessage);
         }
+        public async Task<string> EnviarMensajeTemplate(string numeroTelefonoObjetivo, string nombrePlantilla, string[] parametrosPlantilla)
+{
+    try
+    {
+        if (string.IsNullOrWhiteSpace(numeroTelefonoObjetivo))
+            throw new ArgumentException("El número de teléfono no puede estar vacío.");
+        else if (string.IsNullOrWhiteSpace(nombrePlantilla))
+            throw new ArgumentException("El nombre de la plantilla no puede estar vacío.");
+        else if (parametrosPlantilla == null || parametrosPlantilla.Length == 0)
+            throw new ArgumentException("Los parámetros de la plantilla no pueden estar vacíos.");
+
+    }
+    catch (Exception ex)
+    {
+        return $"Error: {ex}";
+    }
+    var finalMessage = new
+    {
+        messaging_product = "whatsapp",
+        to = numeroTelefonoObjetivo,
+        type = "template",
+        template = new
+        {
+            name = nombrePlantilla,
+            language = new { code = "es_MX" },
+            components = new[]
+        {
+            new {
+                type = "body",
+                parameters = parametrosPlantilla.Select(param => new { type = "text", text = param }).ToArray()
+            }
+        }
+        }
+    };
+
+    return await EnviarMensaje(BuildApiUrl(), finalMessage);
+}
+public async Task<string> EnviarFlow(string numeroTelefonoObjetivo,string flowId, string flowToken)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(numeroTelefonoObjetivo))
+                    throw new ArgumentException("El número de teléfono no puede estar vacío.");
+                else if (string.IsNullOrWhiteSpace(flowId))
+                    throw new ArgumentException("El ID del flujo no puede estar vacío.");
+
+            }
+            catch (Exception ex)
+            {
+                return $"Error: {ex}";
+            }
+            var messagePayload = new
+            {
+                messaging_product = "whatsapp",
+                to = numeroTelefonoObjetivo,
+                type = "interactive",
+                interactive = new
+                {
+                    type = "flow",
+                    body = new
+                    {
+                        text = "¡Prueba este Flow!"        
+                        },
+        action = new
+        {
+            name = "flow",
+            parameters = new
+            {
+                flow_message_version = "6.3",
+                mode = "draft", // Modo borrador
+                flow_token = flowToken,
+                flow_id = flowId,
+                flow_cta = "Open", // Texto del botón
+                flow_action = "data_exchange" // Acción del Flow
+            }
+        }
+    }
+};
+        return await EnviarMensaje(BuildApiUrl(), messagePayload);
+}
+                                    
         public async Task EnviarMensajeError(string numeroTelefonoObjetivo, string mensajeError)
         {
             await EnviarTexto(numeroTelefonoObjetivo, mensajeError);
